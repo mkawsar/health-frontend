@@ -6,10 +6,28 @@ import Button from '@/components/ui/button/Button';
 import { EyeCloseIcon, EyeIcon } from '@/icons';
 import Link from 'next/link';
 import React, { useState } from 'react';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
+const schema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
+});
+
+// Infer TypeScript types from Zod schema
+type FormData = z.infer<typeof schema>;
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const { register, handleSubmit, formState: {errors} } = useForm<FormData>({resolver: zodResolver(schema)});
+
+  const onSubmit = (data: FormData) => {
+    toast.success('Sign in successful!');
+  };
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -75,22 +93,19 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-6">
                 <div>
-                  <Label>
-                    Email <span className="text-error-500">*</span>{" "}
-                  </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Label>Email <span className="text-error-500">*</span>{" "}</Label>
+                  <Input placeholder="info@gmail.com" type="email" {...register("email")} />
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
                 </div>
                 <div>
-                  <Label>
-                    Password <span className="text-error-500">*</span>{" "}
-                  </Label>
+                  <Label>Password <span className="text-error-500">*</span>{" "}</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder="Enter your password" {...register("password")}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -98,6 +113,7 @@ export default function SignInForm() {
                     >
                       {showPassword ? ( <EyeIcon /> ) : ( <EyeCloseIcon />)}
                     </span>
+                    {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
